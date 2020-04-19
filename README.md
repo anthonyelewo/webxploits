@@ -4,8 +4,8 @@
 
 ## Getting started
 1. Clone repository:
-* HTTPS: `git clone https://github.com/EurostarDigital/tealium.git`
-* SSH (recommended): `git clone git@github.com:EurostarDigital/tealium.git`
+* HTTPS: `git clone https://github.com/anthonyelewo/webxploits.git`
+* SSH (recommended): `git@github.com:anthonyelewo/webxploits.git`
 2. Install project dependencies:
 ```
 npm install
@@ -29,10 +29,10 @@ Following terminal commands can be utilised from within the __tealium__ director
 1. Navigate to the __tealium__ directory: `cd /example/path/to/tealium/`
 2. Switch to the __master__ branch: `git checkout master`
 3. Download updates from the remote repository: `git pull`
-4. Create a new branch with a unique name (e.g. Jira ticket ID): `git checkout -b DIP-000`
+4. Create a new branch with a unique name (e.g. Jira ticket ID): `git checkout -b Draft-001`
 5. Code :neckbeard:
 6. Add changes to the local repository: `git add .`
 7. Commit changes to the local repository with appropriate comments: `git commit -am "I'm Batman! The commit without parents :("`
-8. Upload changes to the remote repository: `git push origin -f DIP-000`
-9. Visit https://github.com/EurostarDigital/tealium/pulls and create a pull request (PR)
+8. Upload changes to the remote repository: `git push origin -f Draft-01`
+9. Visit https://github.com/anthonyelewo/webxploits/pulls and create a pull request (PR)
 10. Ensure changes are reviewed and tested
