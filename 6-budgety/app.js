@@ -1,17 +1,27 @@
 // Budget Controller
 var budgetController = (function() {
 
-// Income function 
+// Income function constructor
 var Income = function(id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
 };
 
+// Expenses function constructor
 var Expense = function(id, description, value) {
     this.id = id;
     this.description = description;
     this.value = value;
+};
+
+var calculateTotal = function(typ) {
+    var totalArr = appData.items[typ];
+    var total = 0;
+    totalArr.forEach(function(current) {
+      total += current.value;
+      appData.totals[typ] = total;
+    })
 };
 
 var appData = {
@@ -22,7 +32,9 @@ var appData = {
     totals: {
         exp: 0,
         inc: 0
-    }
+    },
+    budget: 0,
+    percentage: -1
 };
     
 return {
@@ -44,16 +56,32 @@ return {
         appData.items[typ].push(newItem);
         return newItem;
     },
-    testing: function() {
-        return appData;
+    getBudget: function() {
+        return {
+           budget: appData.budget,
+           income: appData.totals.inc,
+           expenses: appData.totals.exp,
+           percentage: appData.percentage 
+        };
+    },
+    calculateBudget: function() {
+
+        // 1. calculate totals
+        calculateTotal('exp');
+        calculateTotal('inc');
+
+        // 2. calculate budget
+        appData.budget = appData.totals.inc - appData.totals.exp;
+
+        // 3. calculate percentage
+        if (appData.totals.inc > 0) {
+          appData.percentage = Math.round((appData.totals.exp / appData.totals.inc) * 100);
+        } else {
+          appData.percentage = -1;
+        }
     }
 }
-
-
 })();
-
-
-
 
 // UI Controller
 var UIController = (function() {
@@ -63,7 +91,11 @@ var UIController = (function() {
       inputValue: '.add__value',
       addButton: '.add__btn',
       incomeContainer: '.income__list',
-      expenseContainer: '.expenses__list'
+      expenseContainer: '.expenses__list',
+      totalBudget: '.budget__value',
+      totalIncome: '.budget__income--value',
+      totalExpenses: '.budget__expenses--value',
+      totalPercentage: '.budget__expenses--percentage'
     };
 
     return {
@@ -71,7 +103,7 @@ var UIController = (function() {
           return {
             type: document.querySelector(DOMstrings.inputType).value,
             description: document.querySelector(DOMstrings.inputDescription).value,
-            value: document.querySelector(DOMstrings.inputValue).value
+            value: parseFloat(document.querySelector(DOMstrings.inputValue).value)
           };
         },
         getDomStrings: function() {
@@ -96,14 +128,30 @@ var UIController = (function() {
 
             // Insert into DOM
             document.querySelector(htmlElement).insertAdjacentHTML('beforeend', newHtml);
+        },
+        clearInputField: function() {
+            var inputFieldNodeList = document.querySelectorAll(DOMstrings.inputDescription + ', ' + DOMstrings.inputValue);
+            inputFieldNodeList = Array.prototype.slice.call(inputFieldNodeList);
+
+            inputFieldNodeList.forEach(function(current) {
+                current.value = '';
+                inputFieldNodeList[0].focus();
+            })
+        },
+        displayBudget: function(data) {
+          document.querySelector(DOMstrings.totalBudget).textContent = data.budget;
+          document.querySelector(DOMstrings.totalIncome).textContent = data.income;
+          document.querySelector(DOMstrings.totalExpenses).textContent = data.expenses;
+
+          if (data.percentage > 0) {
+            document.querySelector(DOMstrings.totalPercentage).textContent = data.percentage + '%';
+          } else {
+            document.querySelector(DOMstrings.totalPercentage).textContent = '---';
+          }
+          
         }
     }
-
-
 })();
-
-
-
 
 // App Controller
 var appController = (function(budgetCtrl, UICtrl) {
@@ -113,29 +161,43 @@ var appController = (function(budgetCtrl, UICtrl) {
       document.querySelector(DOMstrings.addButton).addEventListener('click', ctrlAdditem);
     };
 
+    var updateBudget = function() {
+
+        // 1. Calculate the budget
+        budgetCtrl.calculateBudget();
+
+        // 2. Display the budget on the UI
+        var budget = budgetCtrl.getBudget();
+
+        UICtrl.displayBudget(budget);
+    };
+
     var ctrlAdditem = function() {
         // 1. Get field input data
         var inputData = UICtrl.getInputValues();
 
-        // 2. Add item to the budget controller
-        var newItem = budgetCtrl.addItem(inputData.type, inputData.description, inputData.value);
+        if (inputData.description !== '' && !isNaN(inputData.value) && inputData.value > 0) {
+          // 2. Add item to the budget controller
+          var newItem = budgetCtrl.addItem(inputData.type, inputData.description, inputData.value);
 
-        // 3. Add the item to UI
-        UICtrl.addListItem(newItem, inputData.type);
+          // 3. Add the item to UI
+          UICtrl.addListItem(newItem, inputData.type);
 
-        // 4. Calculate the budget
+          // 4. Clear input field
+          UICtrl.clearInputField();
 
-        // 5. Display the budget on the UI
+          // 5. Update and display budget
+          updateBudget();
+        }
 
     };
 
     return {
         init: function() {
-            console.log('Wagwam bros, App don start Ō');
+            console.log('Bros Yee, App don start Ō');
             setupEventListeners();
         }
     };
-
 })(budgetController, UIController);
 
 appController.init();
