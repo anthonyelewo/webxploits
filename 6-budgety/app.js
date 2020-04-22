@@ -20,8 +20,8 @@ var calculateTotal = function(typ) {
     var total = 0;
     totalArr.forEach(function(current) {
       total += current.value;
-      appData.totals[typ] = total;
-    })
+    });
+    appData.totals[typ] = total;
 };
 
 var appData = {
@@ -83,13 +83,14 @@ return {
     removeItem: function(typ, itemId) {
         // 1. remove from data structure
         var arr = appData.items[typ];
-        var itemIndex;
-        for (var i = 0; i < arr.length; i++) {
-          if (itemId === arr[i].id) {
-            itemIndex = i;
-          }
+        var idArr = arr.map(function(current) {
+            return current.id;
+        });
+        var idPosition = idArr.indexOf(itemId);
+
+        if (idPosition !== -1) {
+          arr.splice(idPosition, 1);
         }
-        delete arr[itemIndex];
     }
 }
 })();
@@ -164,16 +165,16 @@ var UIController = (function() {
         },
 
         deleteItemList: function(evt) {
-           var eventTargetNode = evt.target.parentNode.parentNode.parentNode.parentNode.id;
-           var eventIdSplit = eventTargetNode.split('-');
-           var type = eventIdSplit[0];
-           type = (eventIdSplit[0] === 'income') ? 'inc' : 'exp';
-           var id = eventIdSplit[1];
-           var deleteItem = document.getElementById(eventTargetNode);
-           deleteItem.remove();
+           var idValue = evt.target.parentNode.parentNode.parentNode.parentNode.id;
+           var idValueSplit = idValue.split('-');
+           var type = idValueSplit[0];
+           type = (idValueSplit[0] === 'income') ? 'inc' : 'exp';
+           var itemId = parseInt(idValueSplit[1]);
+           var item = document.getElementById(idValue);
+           item.parentNode.removeChild(item);
            return {
             type: type,
-            id: id
+            id: itemId
            };
         }
     }
@@ -227,7 +228,7 @@ var appController = (function(budgetCtrl, UICtrl) {
         var deleteData = UICtrl.deleteItemList(event);
 
         // 2. delete item from data structure
-        budgetCtrl.removeItem(deleteData.type, parseInt(deleteData.id)); 
+        budgetCtrl.removeItem(deleteData.type, deleteData.id); 
 
         // 3. re-calculate the budget
          updateBudget();
@@ -236,11 +237,12 @@ var appController = (function(budgetCtrl, UICtrl) {
     return {
         init: function() {
             var clearFields = function() {
-              var DOMstrings = UICtrl.getDomStrings();
-              document.querySelector(DOMstrings.totalBudget).textContent = 0;
-              document.querySelector(DOMstrings.totalIncome).textContent = 0;
-              document.querySelector(DOMstrings.totalExpenses).textContent = 0;
-              document.querySelector(DOMstrings.totalPercentage).textContent = '---';
+              UICtrl.displayBudget({
+                 budget: 0,
+                 income: 0,
+                 expenses: 0,
+                 percentage: -1 
+              });
             };
             console.log('Bros Yee, App don start Ō');
             setupEventListeners();
