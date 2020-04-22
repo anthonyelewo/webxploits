@@ -79,6 +79,17 @@ return {
         } else {
           appData.percentage = -1;
         }
+    },
+    removeItem: function(typ, itemId) {
+        // 1. remove from data structure
+        var arr = appData.items[typ];
+        var itemIndex;
+        for (var i = 0; i < arr.length; i++) {
+          if (itemId === arr[i].id) {
+            itemIndex = i;
+          }
+        }
+        delete arr[itemIndex];
     }
 }
 })();
@@ -95,7 +106,9 @@ var UIController = (function() {
       totalBudget: '.budget__value',
       totalIncome: '.budget__income--value',
       totalExpenses: '.budget__expenses--value',
-      totalPercentage: '.budget__expenses--percentage'
+      totalPercentage: '.budget__expenses--percentage',
+      deleteButton: '.item__delete--btn',
+      appContainer: '.container.clearfix'
     };
 
     return {
@@ -148,7 +161,20 @@ var UIController = (function() {
           } else {
             document.querySelector(DOMstrings.totalPercentage).textContent = '---';
           }
-          
+        },
+
+        deleteItemList: function(evt) {
+           var eventTargetNode = evt.target.parentNode.parentNode.parentNode.parentNode.id;
+           var eventIdSplit = eventTargetNode.split('-');
+           var type = eventIdSplit[0];
+           type = (eventIdSplit[0] === 'income') ? 'inc' : 'exp';
+           var id = eventIdSplit[1];
+           var deleteItem = document.getElementById(eventTargetNode);
+           deleteItem.remove();
+           return {
+            type: type,
+            id: id
+           };
         }
     }
 })();
@@ -159,10 +185,15 @@ var appController = (function(budgetCtrl, UICtrl) {
     var setupEventListeners = function() {
       var DOMstrings = UICtrl.getDomStrings();
       document.querySelector(DOMstrings.addButton).addEventListener('click', ctrlAdditem);
+      document.querySelector(DOMstrings.appContainer).addEventListener('click', function(event) {
+          var deleteClass = document.querySelector(DOMstrings.deleteButton);
+        if (deleteClass !== null) {
+            deleteItem(event);
+        }
+      });
     };
 
     var updateBudget = function() {
-
         // 1. Calculate the budget
         budgetCtrl.calculateBudget();
 
@@ -189,13 +220,31 @@ var appController = (function(budgetCtrl, UICtrl) {
           // 5. Update and display budget
           updateBudget();
         }
+    };
 
+    var deleteItem = function(event) {
+        // 1. delete item from the user interface
+        var deleteData = UICtrl.deleteItemList(event);
+
+        // 2. delete item from data structure
+        budgetCtrl.removeItem(deleteData.type, parseInt(deleteData.id)); 
+
+        // 3. re-calculate the budget
+         updateBudget();
     };
 
     return {
         init: function() {
+            var clearFields = function() {
+              var DOMstrings = UICtrl.getDomStrings();
+              document.querySelector(DOMstrings.totalBudget).textContent = 0;
+              document.querySelector(DOMstrings.totalIncome).textContent = 0;
+              document.querySelector(DOMstrings.totalExpenses).textContent = 0;
+              document.querySelector(DOMstrings.totalPercentage).textContent = '---';
+            };
             console.log('Bros Yee, App don start Ō');
             setupEventListeners();
+            clearFields();
         }
     };
 })(budgetController, UIController);
